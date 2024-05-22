@@ -1,0 +1,60 @@
+---
+- name: Install and configure Apache server
+  hosts: all
+  become: true  # Run tasks with elevated privileges( executed with sudo)
+
+  tasks:
+    - name: Update package lists # equivalent to sudo apt update
+      apt: 
+        update_cache: yes
+
+    - name: Copy the script to the VM
+      copy:
+        src: ../Script.sh
+        dest: /home/vagrant
+        mode: '0755'
+
+    - name: Execute the script
+      command: /home/vagrant/Script.sh
+      args:
+        chdir: /home/vagrant    
+
+    - name: Copy configuration file 
+      copy:
+        src: pollahyves.conf
+        dest: /etc/apache2/sites-available
+        # permision of the file
+        owner: root 
+        group: root
+        mode: 0644
+
+
+    - name: Copy the index.html to server
+      copy:
+        src: index.html
+        dest: /var/www/html
+        owner: root 
+        group: root
+        mode: 0644
+
+     - name: Ajouter le nom de domaine au fichier hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "144.126.152.251  kamergaz.life"
+        state: present
+      notify: Redémarrer Apache  # Utilisez une notification pour redémarrer Apache après avoir ajouté le nom de domaine
+
+    - name: Activer le site Apache
+      command: a2ensite mon_site.conf
+      args:
+        chdir: /etc/apache2/sites-available  # Assurez-vous que le répertoire actif est correct
+
+  handlers:
+    - name: Redémarrer Apache
+      service:
+        name: apache2
+        state: restarted
+
+
+
+ 

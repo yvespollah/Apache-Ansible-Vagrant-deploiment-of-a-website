@@ -1,0 +1,45 @@
+---
+- name: Install and configure Apache server
+  hosts: all
+  become: true  # Run tasks with elevated privileges( executed with sudo)
+
+  tasks:
+    - name: Update package lists # equivalent to sudo apt update
+      apt: 
+        update_cache: yes
+
+    - name: Copy the script to the VM
+      copy:
+        src: ../Script.sh
+        dest: /home/vagrant
+        mode: '0755'
+
+    - name: Execute the script
+      command: /home/vagrant/Script.sh
+      args:
+        chdir: /home/vagrant    
+
+    - name: Copy configuration file 
+      copy:
+        src: ../l3-21t2516.cm.conf
+        dest: /etc/apache2/sites-available
+        # permision of the file
+        owner: root 
+        group: root
+        mode: 0644
+    - name: Copy the index.md to the VM
+      copy:
+        src: ../index.md
+        dest: /home/vagrant/mon-site
+        owner: root 
+        group: root
+        mode: 0644
+         
+
+    - name: Restart apache service # equivalent to sudo systemctl restart isc-dhcp-server    on ubuntu
+      service:
+        name: apache2
+        state: restarted
+
+
+ 
